@@ -1,0 +1,27 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*$py.class
+
+# Virtual environment
+.venv/
+
+# Cursor/VSCode settings
+.vscode/
+
+# Environment/config
+.env
+
+# Logs, data, and temp files
+*.log
+*.sqlite3
+.cache/
+tmp/
+*.tmp
+
+# Jupyter notebook junk (if you use notebooks later)
+.ipynb_checkpoints/
+
+whoosh_index/
