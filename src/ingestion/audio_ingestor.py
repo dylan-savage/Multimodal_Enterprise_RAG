@@ -1,16 +1,15 @@
 import whisper
 import os
-from .document_chunk import DocumentChunk
+from .chunking import semantic_chunk_and_embed
 
 def ingest_audio(file_path: str):
-
     model = whisper.load_model("base") 
     result = model.transcribe(file_path)
     text = result.get("text", "").strip()
 
     if not text:
         print(f"No transcript returned from audio: {file_path}")
-        return []
+        return [], []
 
     metadata = {
         "modality": "audio",
@@ -18,11 +17,8 @@ def ingest_audio(file_path: str):
         "duration": result.get("duration", None),
     }
 
-    chunk = DocumentChunk(
-        content=text,
+    return semantic_chunk_and_embed(
+        text=text,
         source_file=os.path.basename(file_path),
-        chunk_index=0,
         metadata=metadata
     )
-
-    return [chunk]

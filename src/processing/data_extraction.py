@@ -6,29 +6,54 @@ from ingestion.document_chunk import DocumentChunk
 from config.llm_config import TOGETHER_MODEL, TOGETHER_URL, get_together_headers
 
 def extract_graph_data_from_chunk(chunk: DocumentChunk) -> Dict:
-    prompt = f"""
-    You are an information extraction engine. Your task is to read the following document text and extract:
+    system_prompt = """You are an expert at extracting structured information from text.
+Your task is to identify entities and their relationships in the given text.
 
-    1. Entities — people, organizations, locations, or any other important nouns and other named things.
-    2. Relationships — in the form of triplets (subject, predicate, object) that describe meaningful connections.
+For entities, identify:
+- People (PER)
+- Organizations (ORG)
+- Locations (LOC)
+- Dates (DATE)
+- Numbers (NUM)
+- Other relevant entities (MISC)
 
-    Even if the input is phrased as a short sentence or question, infer any implied relationships that can be reasonably identified.
+For relationships, identify:
+- Subject-verb-object triplets
+- Hierarchical relationships
+- Temporal relationships
+- Causal relationships
+- Part-whole relationships
 
-    Return your output in this JSON format:
-    {{
-    "entities": [...],
-    "relationships": [...]
-    }}
+Return your output in this JSON format:
+{
+    "entities": [
+        {
+            "name": "entity name",
+            "type": "entity type",
+            "start": start_index,
+            "end": end_index
+        }
+    ],
+    "relationships": [
+        {
+            "subject": "subject entity",
+            "predicate": "relationship type",
+            "object": "object entity",
+        }
+    ]
+}"""
 
-    Return your output in valid JSON with two top-level keys:
-    - "entities": a list of objects with name and type
-    - "relationships": a list of subject-predicate-object triplets
+    user_prompt = f"""Analyze the following text and extract entities and relationships:
 
+Text: {chunk.content}
 
-    Here is the input text:
+Focus on:
+1. Named entities (people, organizations, locations, dates, numbers)
+2. Relationships between entities
+3. Hierarchical and temporal relationships
+4. Causal and part-whole relationships
 
-    \"\"\"{chunk.content}\"\"\"
-    """
+Return the results in the specified JSON format."""
 
     response = requests.post(
         TOGETHER_URL,
@@ -36,8 +61,8 @@ def extract_graph_data_from_chunk(chunk: DocumentChunk) -> Dict:
         json={
             "model": TOGETHER_MODEL,
             "messages": [
-                {"role": "system", "content": "You extract structured entities and relationships from documents."},
-                {"role": "user", "content": prompt}
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
             ],
             "temperature": 0.0
         }
@@ -56,7 +81,16 @@ def extract_graph_data_from_chunk(chunk: DocumentChunk) -> Dict:
         cleaned_output = raw_output.strip()
 
     try:
-        return json.loads(cleaned_output)
-    except json.JSONDecodeError:
-        raise ValueError(f"LLM response could not be parsed as JSON:\n{cleaned_output}")
+        result = json.loads(cleaned_output)
+        
+        # Validate the structure
+        if not isinstance(result, dict):
+            raise ValueError("Result is not a dictionary")
+        if "entities" not in result or "relationships" not in result:
+            raise ValueError("Missing required keys: entities and relationships")
+        
+        return result
+        
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Failed to parse LLM response as JSON: {str(e)}\nRaw output: {raw_output}")
 

@@ -32,7 +32,29 @@ brew install ffmpeg     # for audio/video processing
   NEO4J_PASSWORD=your_password
   ```
 
-### 4. Together.ai LLM Setup
+### 4. Qdrant Setup (Vector Database)
+
+- Start Qdrant using Docker:
+  ```bash
+  # Start Qdrant container
+  docker run -d -p 6333:6333 -p 6334:6334 -v $(pwd)/qdrant_storage:/qdrant/storage qdrant/qdrant
+  ```
+
+- The container will be accessible at:
+  - HTTP API: http://localhost:6333
+  - gRPC: localhost:6334
+
+- To stop the container:
+  ```bash
+  docker stop <container_name>
+  ```
+
+- To start it again:
+  ```bash
+  docker start <container_name>
+  ```
+
+### 5. Together.ai LLM Setup
 
 - Add your API key in `.env`:
 
@@ -43,18 +65,17 @@ brew install ffmpeg     # for audio/video processing
 ---
 
 ## Pushing Data
-To ingest data into the system, place your files into the `data/` directory and run the relevant ingestion scripts after updating the file path:
+To ingest data into the system, place your files into the `data/` directory and run the hybrid storage script:
 
 ```bash
-# Push structured chunks to Qdrant (semantic vector search)
-PYTHONPATH=src python src/scripts/push_to_qdrant.py
-
-# Push entity/relationship triples to Neo4j (graph traversal)
-PYTHONPATH=src python src/scripts/push_to_neo.py
-
-# Index documents for keyword search using Whoosh
-PYTHONPATH=src python src/scripts/test_whoosh.py
+# Push data to all storage systems (Qdrant, Neo4j, and Whoosh)
+PYTHONPATH=src python src/scripts/push_to_hybrid_storage.py <file_path>
 ```
+
+The script supports multiple file types:
+- Text files (.txt, .md, .pdf, .html)
+- Image files (.jpg, .jpeg, .png, .gif, .bmp)
+- Audio files (.mp3, .wav, .m4a, .ogg)
 
 ---
 
@@ -87,39 +108,13 @@ PYTHONPATH=src python src/crew_pipeline/main_pipeline.py
 - Entity and Relationship extraction
 - CrewAI agent pipeline
 
-## Remaining Work
+## To Improve
 
-- **Retrieval within Crew pipeline inconsistent**
-  While storage methods perform well in test scripts, query formatting inside CrewAI tools sometimes break retrieval.
-
-- **Answer hallucination due to weak or missing context**  
-  If retrieval fails or returns irrelevant data, the Generator may hallucinate answers. This is especially apparent when the Reranker has little to work with.
-
-- **No UI or interactive demo**  
-  The current system runs entirely via CLI. 
-
-- **Graph depth and schema coverage**  
-  Neo4j holds only shallow relationships (e.g., 1-hop facts like `NFL —[has]→ committee`). Expanding entity-linking and enriching with deeper or cross-modal nodes would make for better reasoning.
-
-- **Evaluation framework is identified but not applied**  
-  A structured evaluation plan was outlined, targeting key metrics:
-  - Faithfulness
-  - Retrieval Relevance
-  - Answer Correctness
-  Query types considered included look-up, reasoning, and cross-modal (MVP), with stretch goals summarization and sentiment analysis. 
-  Formal test cases and metric scoring with deepeval have not yet been implemented. This means that there is also no evaluation output after each query.
-
-- **Smaller Items**
-  - Clarifier loopback
-  - LLaVA for image ingestion
-  - Data Extraction from graph
-    - graph validation logic — Prevent malformed data or duplicates
-    - Filtering by predicate
-    - More test coverage for graph pipeline
-  - Format pushing techniques for large amounts of data to all three storages
-  - Modal-Specific Queries
-  - Crew retry logic and graceful failure handling
-
+- **Answer hallucinations in non lookup queries**
+- **eval log output for each query**
+- **Stronger entity relationships**
+- **Better Documentation**
+- **Query Type handling with specific retrieval techniques**
 
 ## Notes
 

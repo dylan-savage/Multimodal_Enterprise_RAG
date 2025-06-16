@@ -39,7 +39,6 @@ class QdrantStorage:
         print(f"Uploaded {len(points)} chunks to Qdrant.")
 
     def search_chunks(self, query: str, top_k: int = 5) -> List[dict]:
-
         try:
             query_vector = self.model.encode(f"passage: {query}").tolist()
 
@@ -61,3 +60,12 @@ class QdrantStorage:
             ]
         except Exception as e:
             return [{"error": str(e)}]
+
+    def clear_database(self) -> None:
+        """Delete all points from the collection."""
+        self.client.delete_collection(collection_name=self.collection_name)
+        self.client.create_collection(
+            collection_name=self.collection_name,
+            vectors_config=VectorParams(size=self.model.get_sentence_embedding_dimension(), distance=Distance.COSINE),
+        )
+        print("Cleared Qdrant database.")

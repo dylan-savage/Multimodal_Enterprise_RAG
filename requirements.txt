@@ -1,6 +1,6 @@
 PyMuPDF
 beautifulsoup4
-git+https://github.com/GPTim/chonkie.git 
+chonkie
 chonkie[semantic]
 sentence-transformers
 torch
@@ -17,3 +17,5 @@ together
 python-dotenv
 crewai
 deepeval
+llm-ie
+jupyter

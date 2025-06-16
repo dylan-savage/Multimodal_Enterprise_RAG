@@ -12,7 +12,7 @@ __pycache__/
 .vscode/
 
 # Environment/config
-.env
+# .env
 
 # Logs, data, and temp files
 *.log
@@ -25,3 +25,4 @@ tmp/
 .ipynb_checkpoints/
 
 whoosh_index/
+qdrant_storage/

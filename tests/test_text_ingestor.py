@@ -12,6 +12,12 @@ def test_chunk_and_embed_text():
     assert len(chunks) > 0, "No chunks returned"
     assert len(chunks) == len(embeddings), "Mismatch between chunks and embeddings"
 
+    print("\n=== Chunk Contents ===")
+    for i, chunk in enumerate(chunks, 1):
+        print(f"\n--- Chunk {i} ---")
+        print(chunk.content)
+        print("-" * 50)
+
     for chunk in chunks:
         assert isinstance(chunk, DocumentChunk)
         assert isinstance(chunk.content, str)
@@ -19,4 +25,4 @@ def test_chunk_and_embed_text():
 
     assert embeddings[0].shape, "Embedding not generated"
 
-    print(f"Test passed: {len(chunks)} chunks embedded.")
+    print(f"\nTest passed: {len(chunks)} chunks embedded.")

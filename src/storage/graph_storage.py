@@ -87,3 +87,4 @@ class GraphStorage:
     def clear_database(self) -> None:
         with self.driver.session() as session:
             session.run("MATCH (n) DETACH DELETE n")
+        print("Cleared Neo4j database.")
